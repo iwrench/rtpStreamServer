@@ -71,3 +71,117 @@ int main(int argc, char* argv[])
     return 0;
 };
 ```
+
+# Описание дочерних классов
+
+## Класс AudioCapturer
+Прием данных с микрофона, имеет API для подключения кодека и возможность выбрать качество 
+передаваемых данных ( частоту дискретизации) перед использованием (не runtime опция).
+
+Зависит от  
+### mmsystem
+это предустановленная библиотека в windows 10 / 11, отвечающий за внешее аудио оборудование
+### aTcpClient
+этот класс поставляется в настоящем пакете, отвечает за сетевой траффик (отсылка и прием)
+
+### Пример использования 
+
+```
+WAVEFORMATEX waveFormat = {};
+	waveFormat.wFormatTag = WAVE_FORMAT_PCM;
+	waveFormat.nChannels = 1;
+	waveFormat.nSamplesPerSec = MAIN_SAMPLE_RATE;
+	waveFormat.wBitsPerSample = 16;
+	waveFormat.nBlockAlign = waveFormat.nChannels * waveFormat.wBitsPerSample / 8;
+	waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * 	waveFormat.nBlockAlign;
+	waveFormat.cbSize = 0;
+
+    /* Microphone capturer instance */
+    std::shared_ptr<AudioCapturer> aCapturer = std::make_shared<AudioCapturer>();
+
+    /* Set up custom settings to capturer */
+    aCapturer->Init(waveFormat);
+
+    /* Set up callback for complete audio blocks when it is be ready */
+    aCapturer->onReceiveCallbackCodec = [&](std::vector<boost::asio::detail::buffered_stream_storage::byte_type> mdata, size_t dataSize, std::string timestamp) -> size_t {
+
+    //std::cout << "Запущен обработчик для " << mdata.size() << " байт" << std::endl;
+    size_t sended = 0;
+    if (tClient) {
+        if (tClient->isConnect()) {
+            sended = tClient->sendData(mdata);
+        }
+        else {
+            sended = -1;
+        }
+        if (sended == -1) {
+            LOG(tClient, "Stoping audio net communicator (tClient)", 0);
+            aCapturer->StopAudioCapture();
+            tClient->stop();
+            LOG(tClient, "Stoped audio net communicator (tClient)", 0);
+        }
+    };
+    return sended;
+    };
+
+    /* Run listening microphone */
+    std::thread setupThread(&AudioCapturer::StartAudioCapture, aCapturer.get());
+    setupThread.join();
+```
+
+## Класс OpusEncoderMiddleware
+Кодирование аудиопотока в кодек OPUS
+
+Зависимость от 
+### opus 
+Это стандартная библиотека, может быть поставлена через менеждер пакетов разработчика vcpkg ( Документация и ссылка на гитхаб тут https://vcpkg.io/en/)
+```
+.\vcpkg install opus
+.\vcpkg integrate install
+```
+```
+#define MAX_ENCODED_AUDIO_DATA_LEN 512
+    #define BLOCK_SIZE_16000 1920
+    // streamPlayer.block_size_16000 same as BLOCK_SIZE_16000
+    LPVOID lpWaveBuf = (char*)lpWaveFromTcp;
+    if (lpWaveBuf != NULL) {
+
+        WAVEFORMATEX waveFormat = {};
+        waveFormat.wFormatTag = WAVE_FORMAT_PCM;
+        waveFormat.nChannels = 1;
+        waveFormat.nSamplesPerSec = 16000;
+        waveFormat.wBitsPerSample = 16;
+        waveFormat.nBlockAlign = waveFormat.nChannels * waveFormat.wBitsPerSample / 8;
+        waveFormat.nAvgBytesPerSec = waveFormat.nSamplesPerSec * 		waveFormat.nBlockAlign;
+        waveFormat.cbSize = 0;
+
+        OpusEncoderMiddleware oEncoder;
+        oEncoder.Init(waveFormat);
+
+        opus_int16* opusData = new opus_int16[streamPlayer.block_size_16000];
+        memcpy(opusData, reinterpret_cast<signed short*>(lpWaveBuf), streamPlayer.block_size_16000 * sizeof(opus_int16));
+        unsigned char* cbits = new unsigned char[MAX_ENCODED_AUDIO_DATA_LEN];
+        ZeroMemory(cbits, MAX_ENCODED_AUDIO_DATA_LEN);
+        int size = oEncoder.Encode(opusData, streamPlayer.block_size_16000, cbits, 	MAX_ENCODED_AUDIO_DATA_LEN);
+        LOG_ME(OpusEncoderMiddleware, "Encoded " + std::to_string(size) + " bytes...", 	0);
+        delete[] opusData;
+        // .. do something which encoded data in `cbits`, send over TCP, for example
+        delete[] cbits;
+    } // end of lpWaveBuf != NULL
+
+    Output:
+    [OpusEncoderMiddleware] Encoded 197 bytes.... ErrCode/Datasize: 0
+```
+
+## Класс aTcpClient
+Обеспечивает отправку и прием TCP пакетов, а так же функцию обратной связи, срабатывающую по событию.
+
+Зависимость от  
+### boost/bind 
+### boost/asio
+### boost/thread 
+Это стандартные библиотеки, могут быть поставлены через менеждер пакетов для разработчиков - vcpkg
+```
+.\vcpkg install boost-bind boost-asio boost-thread 
+.\vcpkg integrate install
+```
