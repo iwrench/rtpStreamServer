@@ -14,14 +14,14 @@
 ## Зависимости:
 
 ###  boost/asio
-Устанавливается через менеждер пакетов разработчика vcpkg 
+Устанавливается через менеждер пакетов разработчика vcpkg ( Документация и ссылка на гитхаб тут https://vcpkg.io/en/)
 ```
 .\vcpkg install boost-asio
 .\vcpkg integrate install
 ```
 
 ### opus
-Устанавливается через менеждер пакетов разработчика vcpkg 
+Устанавливается через менеждер пакетов разработчика vcpkg ( Документация и ссылка на гитхаб тут https://vcpkg.io/en/)
 ```
 .\vcpkg install opus
 .\vcpkg integrate install
