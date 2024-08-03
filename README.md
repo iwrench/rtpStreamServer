@@ -15,17 +15,18 @@
 
 ###  boost/asio
 Устанавливается через менеждер пакетов разработчика vcpkg 
-.\vcpkg install boost-asio
-.\vcpkg integrate install
+
+```.\vcpkg install boost-asio
+.\vcpkg integrate install```
 
 ### opus
 Устанавливается через менеждер пакетов разработчика vcpkg 
-.\vcpkg install opus
-.\vcpkg integrate install
+```.\vcpkg install opus
+.\vcpkg integrate install```
 
 ## Пример использования
 
-#include "rtpStreamServer.h"
+```#include "rtpStreamServer.h"
 #include <conio.h>
 
 int main(int argc, char* argv[])
@@ -46,4 +47,4 @@ int main(int argc, char* argv[])
 
     std::cout << "Вы нажали клавишу ESC. Выход...\n";
     return 0;
-};
+};```
