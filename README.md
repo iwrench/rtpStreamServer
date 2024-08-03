@@ -185,6 +185,8 @@
 .\vcpkg install boost-bind boost-asio boost-thread 
 .\vcpkg integrate install
 ```
+
+## Пример использования
 ```
  boost::asio::io_service io_service;
     std::unique_ptr<aTcpClient> tClient = std::make_unique<aTcpClient>(io_service);
