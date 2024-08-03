@@ -34,21 +34,40 @@
 
 int main(int argc, char* argv[])
 {
+    // Get singleton instance
     rtpStreamServer& serverInstance = rtpStreamServer::getInstance();
+
+    // Connect to SFU server
     char host[] = "example.com";
     char port[] = "8080";
     serverInstance.initRtpStreamServer(host, port);
+    
+    // Add custom codec (alaw,ulaw,g722 etc...)
+    serverInstance.CodecConnector() = [&](signed short* aData, size_t dataSize, unsigned char* cbits) -> size_t {
+        // Some codec code
+        // for example something like this:
+        
+        size_t max_data_bytes = 512;
+        OpusEncoderMiddleware oEncoder;
+        size_t size = oEncoder.Encode(aData, dataSize, cbits, max_data_bytes);
+        return size;
+    };
+
+    // Run audio capture system
     bool result = serverInstance.start();
 
+    // Print test status
     (result) ? std::cout << "Test sucessufully " << std::endl : std::cerr << "Test failed - could not connect " << std::endl;
 
+    // Program terminated only when pressed ESC.
+    // NOTE: rtpStreamServer don't include this mechanizm
     char ch;
-    std::cout << "Нажмите клавишу ESC для выхода...\n";
+    std::cout << "Press ESC for terminate...\n";
     do {
         ch = _getch();
     } while (ch != 27); // 27 - это ASCII-код для ESC
 
-    std::cout << "Вы нажали клавишу ESC. Выход...\n";
+    std::cout << "Bye!\n";
     return 0;
 };
 ```
