@@ -52,7 +52,37 @@
 	        size_t size = oEncoder.Encode(aData, dataSize, cbits, max_data_bytes);
 	        return size;
 	    };
-	
+
+    // Set manual noise level
+    int noise = 55;
+
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) == "-n") {
+            if (i + 1 < argc) {
+                try {
+                    noise = std::stoi(argv[i + 1]);
+                }
+                catch (const std::invalid_argument& e) {
+                    std::cerr << "Invalid argument for noise level: " << argv[i + 1] << std::endl;
+                    return 1;
+                }
+                catch (const std::out_of_range& e) {
+                    std::cerr << "Argument out of range for noise level: " << argv[i + 1] << std::endl;
+                    return 1;
+                }
+                break;
+            }
+            else {
+                std::cerr << "No value provided for noise level" << std::endl;
+                return 1;
+            }
+        }
+    }
+
+    std::cout << "Noise level seting to: " << noise << std::endl;
+    serverInstance.setNoiseLevel(noise);
+
+    bool result = serverInstance.start();
 	    // Run audio capture system
 	    bool result = serverInstance.start();
 	
