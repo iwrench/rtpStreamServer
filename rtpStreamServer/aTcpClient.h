@@ -10,6 +10,7 @@
 #include <vector>
 #include <functional>
 #include <iostream>
+#include <queue>
 
 #define NUM_SAMPLES_8000 960
 #define NUM_SAMPLES_16000 1920
@@ -25,6 +26,7 @@ public:
     size_t sendData(boost::asio::ip::tcp::socket _socket, const std::vector<unsigned char>& data);
     void checkConnection();
     bool isConnect();
+    void processData();
     void listenTcpData(int nSamplesPerSec);
     void stop();
 
@@ -43,6 +45,11 @@ private:
     boost::asio::deadline_timer timer_;
     int checkInterval_;
     int block_size;
+
+    std::queue<std::vector<boost::asio::detail::buffered_stream_storage::byte_type>> data_queue;
+    std::mutex queue_mutex;
+    std::condition_variable queue_condition;
+
 };
 
 #endif // ATCPCLIENT_H
