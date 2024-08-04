@@ -83,23 +83,23 @@
     serverInstance.setNoiseLevel(noise);
 
     bool result = serverInstance.start();
-	    // Run audio capture system
-	    bool result = serverInstance.start();
-	
-	    // Print test status
-	    (result) ? std::cout << "Test sucessufully " << std::endl : std::cerr << "Test failed - could not connect " << std::endl;
-	
-	    // Program terminated only when pressed ESC.
-	    // NOTE: rtpStreamServer don't include this mechanizm
-	    char ch;
-	    std::cout << "Press ESC for terminate...\n";
-	    do {
-	        ch = _getch();
-	    } while (ch != 27); // 27 - это ASCII-код для ESC
-	
-	    std::cout << "Bye!\n";
-	    return 0;
-	};
+    // Run audio capture system
+    bool result = serverInstance.start();
+
+    // Print test status
+    (result) ? std::cout << "Test sucessufully " << std::endl : std::cerr << "Test failed - could not connect " << std::endl;
+
+    // Program terminated only when pressed ESC.
+    // NOTE: rtpStreamServer don't include this mechanizm
+    char ch;
+    std::cout << "Press ESC for terminate...\n";
+    do {
+	ch = _getch();
+    } while (ch != 27); // 27 - это ASCII-код для ESC
+
+    std::cout << "Bye!\n";
+    return 0;
+};
 ```
 
 # Описание дочерних классов
