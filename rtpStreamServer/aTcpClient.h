@@ -38,13 +38,13 @@ public:
     void setSocket(boost::asio::ip::tcp::socket& newSocket);
 
     std::function<void(const std::vector<boost::asio::detail::buffered_stream_storage::byte_type>&)> onReceiveCallback_;
+    static int block_size;
 
 private:
     boost::asio::io_service& io_service_;
     boost::asio::ip::tcp::socket socket;
     boost::asio::deadline_timer timer_;
     int checkInterval_;
-    int block_size;
 
     std::queue<std::vector<boost::asio::detail::buffered_stream_storage::byte_type>> data_queue;
     std::mutex queue_mutex;
