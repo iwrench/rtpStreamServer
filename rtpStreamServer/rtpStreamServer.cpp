@@ -1,4 +1,4 @@
-﻿#include "rtpStreamServer.h"
+#include "rtpStreamServer.h"
 #include <conio.h> // gets
 
 rtpStreamServer& rtpStreamServer::getInstance()
@@ -26,6 +26,11 @@ void rtpStreamServer::initRtpStreamServer(int argc, char* argv[])
     setlocale(LC_ALL, "Russian");
     host = (argc > 1) ? argv[1] : HOST;
     port = (argc > 2) ? argv[2] : PORT;
+}
+
+void rtpStreamServer::setNoiseLevel(int level)
+{
+    aCapturer->noise = level;
 }
 
 bool rtpStreamServer::start() {
@@ -157,6 +162,37 @@ void rtpStreamServer::stop()
 int main(int argc, char* argv[])
 {
     rtpStreamServer& serverInstance = rtpStreamServer::getInstance();
+
+    serverInstance.initRtpStreamServer(argc, argv);
+
+    int noise = 55;
+
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) == "-n") {
+            if (i + 1 < argc) {
+                try {
+                    noise = std::stoi(argv[i + 1]);
+                }
+                catch (const std::invalid_argument& e) {
+                    std::cerr << "Invalid argument for noise level: " << argv[i + 1] << std::endl;
+                    return 1;
+                }
+                catch (const std::out_of_range& e) {
+                    std::cerr << "Argument out of range for noise level: " << argv[i + 1] << std::endl;
+                    return 1;
+                }
+                break;
+            }
+            else {
+                std::cerr << "No value provided for noise level" << std::endl;
+                return 1;
+            }
+        }
+    }
+
+    std::cout << "Noise level seting to: " << noise << std::endl;
+    serverInstance.setNoiseLevel(noise);
+
     bool result = serverInstance.start();
 
     (result) ? std::cout << "Test sucessufully " << std::endl : std::cerr << "Test failed - could not connect " << std::endl;
@@ -169,6 +205,4 @@ int main(int argc, char* argv[])
 
     std::cout << "Вы нажали клавишу ESC. Выход...\n";
     return 0;
-
-
 };
