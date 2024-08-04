@@ -4,7 +4,7 @@ aTcpClient::aTcpClient(boost::asio::io_service& io_service) : block_size(NUM_SAM
 }
 
 void aTcpClient::connectToServer(const std::string& host, const std::string& port) {
-  
+
     boost::asio::ip::tcp::resolver resolver(io_service_);
     boost::asio::ip::tcp::resolver::query query(host, port);
     boost::asio::ip::tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
@@ -70,23 +70,43 @@ bool aTcpClient::isConnect() {
     }
 }
 
-void aTcpClient::listenTcpData(int nSamplesPerSec) {
+void aTcpClient::processData() {
+    while (true) {
+        std::vector<boost::asio::detail::buffered_stream_storage::byte_type> mdata;
+        {
+            std::unique_lock<std::mutex> lock(queue_mutex);
+            queue_condition.wait(lock, [this] { return !data_queue.empty(); });
+            mdata = data_queue.front();
+            data_queue.pop();
+        }
 
+        if (onReceiveCallback_) {
+            onReceiveCallback_(mdata);
+        }
+    }
+}
+
+void aTcpClient::listenTcpData(int nSamplesPerSec) {
     block_size = (nSamplesPerSec == 8000) ? NUM_SAMPLES_8000 : (nSamplesPerSec == 16000) ? NUM_SAMPLES_16000 : NUM_SAMPLES_48000;
+    size_t len = 0;
+
+    // Запускаем поток для обработки данных
+    std::thread(&aTcpClient::processData, this).detach();
 
     while (isConnect()) {
         std::vector<unsigned char> buffer(block_size);
         try {
-            size_t len = socket.read_some(boost::asio::buffer(buffer));
+            len = socket.read_some(boost::asio::buffer(buffer));
             if (len > 0) {
-                if (onReceiveCallback_) {
-                    buffer.resize(len);
-                    std::vector<boost::asio::detail::buffered_stream_storage::byte_type> mdata(buffer.begin(), buffer.end());
-                    onReceiveCallback_(mdata);
+                buffer.resize(len);
+                std::vector<boost::asio::detail::buffered_stream_storage::byte_type> mdata(buffer.begin(), buffer.end());
+
+                // Помещаем данные в очередь
+                {
+                    std::lock_guard<std::mutex> lock(queue_mutex);
+                    data_queue.push(mdata);
                 }
-                else {
-                    std::cerr << "onReceiveCallback_ don't have implementation !" << std::endl;
-                }
+                queue_condition.notify_one();
             }
         }
         catch (const boost::system::system_error& e) {
@@ -97,7 +117,6 @@ void aTcpClient::listenTcpData(int nSamplesPerSec) {
             std::cerr << "Exception: " << e.what() << std::endl;
             break;
         }
-
     }
 }
 
@@ -108,10 +127,10 @@ void aTcpClient::stop() {
 
 
 void aTcpClient::convertData(const unsigned char* rData, size_t length, std::vector<boost::asio::detail::buffered_stream_storage::byte_type>& data) {
-    // �������� ������ ����� �����������
+    // Очистить вектор перед заполнением
     data.clear();
 
-    // ��������� ������ ������� �� rData
+    // Заполнить вектор данными из rData
     data.assign(rData, rData + length);
 }
 
