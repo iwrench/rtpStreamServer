@@ -92,6 +92,10 @@ public:
 	// Set endpoint for network connection used program parameters
 	void initRtpStreamServer(int argc, char* argv[]);
 
+	// Type:Setter 
+	// Set gain level for noise
+	void setNoiseLevel(int level);
+
 private:
 
 	rtpStreamServer();
