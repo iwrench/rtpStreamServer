@@ -1,4 +1,4 @@
-// AudioCapture.ñpp
+// AudioCapture.Ã±pp
 
 #include "AudioCapturer.h"
 
@@ -180,7 +180,7 @@ std::string AudioCapturer::getCurrentTimestamp() {
 
     std::ostringstream oss;
     oss << std::put_time(&now_tm, "%Y-%m-%d %H:%M:%S");
-    oss << '.' << std::setfill('0') << std::setw(3) << ms.count();  // Äîáàâëÿåì ìèëëèñåêóíäû
+    oss << '.' << std::setfill('0') << std::setw(3) << ms.count();  // Ã„Ã®Ã¡Ã Ã¢Ã«Ã¿Ã¥Ã¬ Ã¬Ã¨Ã«Ã«Ã¨Ã±Ã¥ÃªÃ³Ã­Ã¤Ã»
     return oss.str();
 }
 
@@ -222,7 +222,6 @@ void AudioCapturer::WaveInProc(HWAVEIN hwi, UINT uMsg, DWORD_PTR dwInstance, DWO
                             if (instance->proccessCodec) {
                                 const size_t mdb = instance->max_data_bytes;
                                 std::vector<unsigned char> cbits(mdb);
-                                ZeroMemory(cbits.data(), mdb);
                                 size_t encodedBytes = instance->proccessCodec(codecData, dataSize, cbits.data());
                                 std::vector<boost::asio::detail::buffered_stream_storage::byte_type> mData(cbits.data(), cbits.data() + encodedBytes);
                                 instance->onReceiveCallbackCodec(mData, encodedBytes, currTimestamp);
